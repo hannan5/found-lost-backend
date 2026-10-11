@@ -1,0 +1,110 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+}
+
+enum ItemCategory {
+  ELECTRONICS
+  BAGS_WALLETS
+  CLOTHING
+  ACCESSORIES
+  KEYS
+  DOCUMENTS
+  OTHER
+}
+
+enum ItemStatus {
+  WAITING_FOR_OWNER
+  REUNITED
+}
+
+enum ReviewStatus {
+  PENDING_REVIEW
+  APPROVED
+  REJECTED
+  RETURNED
+}
+
+enum ClaimStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         Role     @default(ADMIN)
+  createdAt    DateTime @default(now())
+}
+
+model FoundItem {
+  id               String       @id @default(cuid())
+  /// Keeps the frontend mock ids ("silver-watch") recognisable after seeding.
+  slug             String?      @unique
+  name             String
+  category         ItemCategory
+  description      String
+  location         String
+  /// "YYYY-MM-DD". The frontend formats plain date strings in UTC.
+  foundDate        String
+  image            String?
+  status           ItemStatus   @default(WAITING_FOR_OWNER)
+  reviewStatus     ReviewStatus @default(PENDING_REVIEW)
+  /// "YYYY-MM-DD"
+  submittedAt      String
+  reporterName     String
+  reporterEmail    String
+  reporterPhone    String
+  reporterWhatsapp String?
+  claims           Claim[]
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  @@index([reviewStatus, submittedAt])
+  @@index([category])
+}
+
+model Claim {
+  id                  String      @id @default(cuid())
+  itemId              String
+  item                FoundItem   @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  claimantName        String
+  claimantEmail       String
+  claimantPhone       String
+  lostItemDescription String
+  ownershipProof      String
+  supportingImage     String?
+  status              ClaimStatus @default(PENDING)
+  /// "YYYY-MM-DD"
+  submittedAt         String
+  createdAt           DateTime    @default(now())
+  updatedAt           DateTime    @updatedAt
+
+  @@index([itemId, status])
+}
+
+/// No UI yet. Kept for the "I lost something" flow and the matching feature.
+model LostItem {
+  id            String       @id @default(cuid())
+  name          String
+  category      ItemCategory
+  description   String
+  location      String
+  /// "YYYY-MM-DD"
+  reportedDate  String
+  reporterName  String
+  reporterEmail String
+  reporterPhone String
+  createdAt     DateTime     @default(now())
+}
