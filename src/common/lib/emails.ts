@@ -8,6 +8,17 @@ function signOff(): string {
   return "\n\nWarm regards,\nThe LostNFind team";
 }
 
+function contactLines(
+  name: string,
+  email: string,
+  phone: string,
+  whatsapp?: string | null,
+): string {
+  const lines = [`  Name: ${name}`, `  Email: ${email}`, `  Phone: ${phone}`];
+  if (whatsapp) lines.push(`  WhatsApp: ${whatsapp}`);
+  return lines.join("\n");
+}
+
 export function newClaimForAdmin(
   adminEmail: string,
   item: FoundItem,
@@ -28,6 +39,7 @@ export function newClaimForAdmin(
   };
 }
 
+/** To the owner: approved, plus how to reach the person holding the item. */
 export function claimApproved(item: FoundItem, claim: Claim): MailMessage {
   return {
     to: claim.claimantEmail,
@@ -35,7 +47,29 @@ export function claimApproved(item: FoundItem, claim: Claim): MailMessage {
     text:
       `Hi ${claim.claimantName},\n\n` +
       `Your claim for "${item.name}" has been approved. ` +
-      `We'll be in touch at ${claim.claimantPhone} to arrange the handover.` +
+      `The person who found it is holding it for you. Please get in touch with them to arrange the handover:\n\n` +
+      contactLines(
+        item.reporterName,
+        item.reporterEmail,
+        item.reporterPhone,
+        item.reporterWhatsapp,
+      ) +
+      `\n\nIt was found at ${item.location}. ` +
+      `Once you have it back, let us know and we'll close the report.` +
+      signOff(),
+  };
+}
+
+/** To the finder: an owner was verified, here is who will contact you. */
+export function claimApprovedForReporter(item: FoundItem, claim: Claim): MailMessage {
+  return {
+    to: item.reporterEmail,
+    subject: `The owner of "${item.name}" has been found`,
+    text:
+      `Hi ${item.reporterName},\n\n` +
+      `Thank you for reporting "${item.name}". We've verified its owner, and they will contact you to collect it:\n\n` +
+      contactLines(claim.claimantName, claim.claimantEmail, claim.claimantPhone) +
+      `\n\nIf you don't hear from them, you're welcome to reach out first.` +
       signOff(),
   };
 }

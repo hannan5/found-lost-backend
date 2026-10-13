@@ -234,7 +234,7 @@ These map one-to-one onto `AdminDataProvider`'s state and setters in `../Lost-FI
 | POST | `/api/admin/items/:id/return` | `markItemReturned` | Sets `reviewStatus: RETURNED` and `status: REUNITED` in one transaction. Emails the approved claimant if one exists. |
 | GET | `/api/admin/claims` | `claims` state | `toAdminClaim` shape. Query: `q` (claimant name/email, item name/location), `status`. Sorted by `submittedAt` desc. |
 | GET | `/api/admin/claims/:id` | `AdminClaimDetails` | Full claim with item |
-| PATCH | `/api/admin/claims/:id/status` | `setClaimStatus` | Body `{ status }`. Only from `PENDING`. Approving one claim auto-rejects the other pending claims on the same item (single transaction). Emails the claimant. |
+| PATCH | `/api/admin/claims/:id/status` | `setClaimStatus` | Body `{ status }`. Only from `PENDING`. Approving one claim auto-rejects the other pending claims on the same item (single transaction), then emails the claimant (with the finder's contact) and the finder (with the claimant's contact). Rejecting emails the claimant. |
 | GET | `/api/admin/stats` | `AdminOverview` | `{ totalItems, pendingClaims, approvedClaims, itemsReturned, recentItems: [4], recentClaims: [4] }` |
 
 ### Status transitions (enforce in services, return `409 CONFLICT` otherwise)

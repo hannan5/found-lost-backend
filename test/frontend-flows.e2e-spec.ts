@@ -805,11 +805,14 @@ describeDb("Frontend flows (e2e, database)", () => {
 
       const rivalAfter = await prisma.claim.findUnique({ where: { id: rival.body.data.id } });
       expect(rivalAfter?.status).toBe("REJECTED");
-      expect(sentMail).toHaveLength(1);
+      expect(sentMail).toHaveLength(2);
       expect(sentMail[0]).toMatchObject({
         to: "robin@example.com",
         subject: 'Good news about "Silver wristwatch"',
       });
+      expect(sentMail[0].text).toContain("+1 202-555-0101"); // finder's phone for the owner
+      expect(sentMail[1]).toMatchObject({ to: "morgan@example.com" });
+      expect(sentMail[1].text).toContain("Robin Harper"); // owner's name for the finder
     });
 
     it("'Reject claim' emails the claimant and is final", async () => {

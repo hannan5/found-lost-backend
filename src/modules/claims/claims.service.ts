@@ -1,7 +1,12 @@
 import { Injectable } from "@nestjs/common";
 import { type Claim, type FoundItem, type Prisma } from "@prisma/client";
 import { AppException } from "../../common/errors/app.exception";
-import { claimApproved, claimRejected, newClaimForAdmin } from "../../common/lib/emails";
+import {
+  claimApproved,
+  claimApprovedForReporter,
+  claimRejected,
+  newClaimForAdmin,
+} from "../../common/lib/emails";
 import { todayUtc } from "../../common/lib/format";
 import {
   type AdminClaim,
@@ -143,11 +148,13 @@ export class ClaimsService {
       return saved;
     });
 
-    const email =
-      target === "APPROVED"
-        ? claimApproved(updated.item, updated)
-        : claimRejected(updated.item, updated);
-    await this.mailer.send(email);
+    if (target === "APPROVED") {
+      // Both sides get each other's contact so they can arrange the handover directly.
+      await this.mailer.send(claimApproved(updated.item, updated));
+      await this.mailer.send(claimApprovedForReporter(updated.item, updated));
+    } else {
+      await this.mailer.send(claimRejected(updated.item, updated));
+    }
 
     return toAdminClaim(updated);
   }

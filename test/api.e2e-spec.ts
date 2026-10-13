@@ -441,9 +441,13 @@ describeDb("API (e2e, database)", () => {
       const rivalAfter = await prisma.claim.findUnique({ where: { id: rival.body.data.id } });
       expect(rivalAfter?.status).toBe("REJECTED");
 
-      expect(sentMail).toHaveLength(1);
+      expect(sentMail).toHaveLength(2);
       expect(sentMail[0].to).toBe("robin@example.com");
       expect(sentMail[0].subject).toMatch(/Good news/);
+      expect(sentMail[0].text).toContain("morgan@example.com"); // finder's contact for the owner
+      expect(sentMail[1].to).toBe("morgan@example.com");
+      expect(sentMail[1].subject).toBe('The owner of "Silver wristwatch" has been found');
+      expect(sentMail[1].text).toContain("robin@example.com"); // owner's contact for the finder
 
       // already reviewed -> 409
       const again = await asAdmin(
